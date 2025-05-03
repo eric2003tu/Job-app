@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { jobService } from '../services/jobService';
 import { Job } from '../types';
 import JobCard from '../components/JobCard';
@@ -8,7 +8,6 @@ import { Loader } from 'lucide-react';
 
 const JobsPage: React.FC = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,10 +16,10 @@ const JobsPage: React.FC = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
+        setError(''); // Clear error before fetching
         setIsLoading(true);
         const jobData = await jobService.getJobs();
         setJobs(jobData);
-        setFilteredJobs(jobData);
       } catch (err) {
         console.error('Error fetching jobs:', err);
         setError('Failed to load jobs. Please try again later.');
@@ -32,50 +31,52 @@ const JobsPage: React.FC = () => {
     fetchJobs();
   }, []);
 
-  useEffect(() => {
-    // Apply filters and search query to jobs
+  const filteredJobs = useMemo(() => {
     let result = [...jobs];
-    
-    // Apply search if present
+
+    // Apply search query
     if (searchQuery) {
       result = result.filter(job => {
         const searchableText = `${job.title} ${job.company} ${job.location} ${job.description} ${job.category || ''}`.toLowerCase();
         return searchableText.includes(searchQuery.toLowerCase());
       });
     }
-    
+
     // Apply filters
     Object.entries(filters).forEach(([key, value]) => {
       if (value) {
         result = result.filter(job => job[key as keyof Job] === value);
       }
     });
-    
-    setFilteredJobs(result);
+
+    return result;
   }, [jobs, searchQuery, filters]);
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
-    
+    setError(''); // Clear error before starting a new search
+
     if (query.trim()) {
       try {
         setIsLoading(true);
         const results = await jobService.searchJobs(query);
-        setFilteredJobs(results);
+        setJobs(results); // Update jobs with search results
       } catch (err) {
         console.error('Error searching jobs:', err);
         setError('Search failed. Please try again.');
       } finally {
         setIsLoading(false);
       }
-    } else {
-      // If search is cleared, reset to filtered view of all jobs
-      setFilteredJobs(jobs);
     }
   };
 
   const handleFilterChange = (newFilters: Record<string, string>) => {
     setFilters(newFilters);
+  };
+
+  const resetFiltersAndSearch = () => {
+    setSearchQuery('');
+    setFilters({});
   };
 
   return (
@@ -89,37 +90,38 @@ const JobsPage: React.FC = () => {
               Browse thousands of job opportunities across Rwanda and take the next step in your career journey.
             </p>
           </div>
-          
+
           <SearchBar onSearch={handleSearch} />
         </div>
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1">
             <JobFilters onFilterChange={handleFilterChange} filters={filters} />
           </div>
-          
+
           <div className="lg:col-span-3">
             <div className="mb-4 flex justify-between items-center">
               <h2 className="text-xl font-semibold text-gray-900">
                 {isLoading ? 'Finding jobs...' : `${filteredJobs.length} Jobs Available`}
               </h2>
-              
+
               {Object.keys(filters).length > 0 && (
-                <button 
+                <button
                   onClick={() => setFilters({})}
                   className="text-sm text-blue-600 hover:text-blue-800"
+                  aria-label="Clear all filters"
                 >
                   Clear all filters
                 </button>
               )}
             </div>
-            
+
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
                 <span className="block sm:inline">{error}</span>
               </div>
             )}
-            
+
             {isLoading ? (
               <div className="flex justify-center items-center py-12">
                 <Loader className="h-8 w-8 text-blue-600 animate-spin" />
@@ -134,12 +136,8 @@ const JobsPage: React.FC = () => {
             ) : (
               <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
                 <p className="text-gray-500">No jobs found matching your criteria.</p>
-                <button 
-                  onClick={() => {
-                    setSearchQuery('');
-                    setFilters({});
-                    setFilteredJobs(jobs);
-                  }}
+                <button
+                  onClick={resetFiltersAndSearch}
                   className="mt-4 text-blue-600 hover:text-blue-800"
                 >
                   Reset search and filters
