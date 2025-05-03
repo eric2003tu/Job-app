@@ -14,27 +14,22 @@ const JobsPage: React.FC = () => {
   const [filters, setFilters] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        setError(''); // Clear error before fetching
-        setIsLoading(true);
-        const jobData = await jobService.getJobs();
-        setJobs(jobData);
-      } catch (err) {
+    jobService
+      .getAllJobs()
+      .then(data => {
+        setJobs(data);
+        setIsLoading(false);
+      })
+      .catch(err => {
         console.error('Error fetching jobs:', err);
         setError('Failed to load jobs. Please try again later.');
-      } finally {
         setIsLoading(false);
-      }
-    };
-
-    fetchJobs();
+      });
   }, []);
 
   const filteredJobs = useMemo(() => {
     let result = [...jobs];
 
-    // Apply search query
     if (searchQuery) {
       result = result.filter(job => {
         const searchableText = `${job.title} ${job.company} ${job.location} ${job.description} ${job.category || ''}`.toLowerCase();
@@ -42,7 +37,6 @@ const JobsPage: React.FC = () => {
       });
     }
 
-    // Apply filters
     Object.entries(filters).forEach(([key, value]) => {
       if (value) {
         result = result.filter(job => job[key as keyof Job] === value);
@@ -52,22 +46,15 @@ const JobsPage: React.FC = () => {
     return result;
   }, [jobs, searchQuery, filters]);
 
-  const handleSearch = async (query: string) => {
+  const handleSearch = (query: string) => {
     setSearchQuery(query);
-    setError(''); // Clear error before starting a new search
-
-    if (query.trim()) {
-      try {
-        setIsLoading(true);
-        const results = await jobService.searchJobs(query);
-        setJobs(results); // Update jobs with search results
-      } catch (err) {
+    jobService
+      .searchJobs(query)
+      .then(data => setJobs(data))
+      .catch(err => {
         console.error('Error searching jobs:', err);
         setError('Search failed. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    }
+      });
   };
 
   const handleFilterChange = (newFilters: Record<string, string>) => {
@@ -82,7 +69,6 @@ const JobsPage: React.FC = () => {
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero Section */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl shadow-lg p-8 mb-8">
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-white mb-4">Find Your Dream Job in Rwanda</h1>
@@ -90,7 +76,6 @@ const JobsPage: React.FC = () => {
               Browse thousands of job opportunities across Rwanda and take the next step in your career journey.
             </p>
           </div>
-
           <SearchBar onSearch={handleSearch} />
         </div>
 

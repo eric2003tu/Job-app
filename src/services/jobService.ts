@@ -1,7 +1,8 @@
-const API_BASE = "http://localhost:3000";
+const API_BASE = "http://localhost:3000/api";
 
-const getAllJobs = () => {
-  return fetch(`${API_BASE}/jobs`, {
+const getAllJobs = (filters = {}) => {
+  const query = new URLSearchParams(filters).toString();
+  return fetch(`${API_BASE}/jobs?${query}`, {
     headers: { "Content-Type": "application/json" },
   })
     .then(res => res.json())
@@ -35,23 +36,47 @@ const postNewJob = (job: object) => {
     });
 };
 
-const applyToJob = (application: object) => {
-  return fetch(`${API_BASE}/apply`, {
-    method: "POST",
+const updateJob = (id: string, updates: object) => {
+  return fetch(`${API_BASE}/jobs/${id}`, {
+    method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(application),
+    body: JSON.stringify(updates),
   })
     .then(res => res.json())
     .catch(err => {
-      console.error("Error submitting application:", err);
+      console.error("Error updating job:", err);
       throw err;
     });
 };
 
-// Ensure applyToJob is included in the export
+const deleteJob = (id: string) => {
+  return fetch(`${API_BASE}/jobs/${id}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+  })
+    .then(res => res.json())
+    .catch(err => {
+      console.error("Error deleting job:", err);
+      throw err;
+    });
+};
+
+const searchJobs = (query: string) => {
+  return fetch(`${API_BASE}/jobs?title=${encodeURIComponent(query)}`, {
+    headers: { "Content-Type": "application/json" },
+  })
+    .then(res => res.json())
+    .catch(err => {
+      console.error("Error searching jobs:", err);
+      throw err;
+    });
+};
+
 export const jobService = {
   getAllJobs,
   getJobById,
   postNewJob,
-  applyToJob,
+  updateJob,
+  deleteJob,
+  searchJobs,
 };
