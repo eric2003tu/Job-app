@@ -141,6 +141,13 @@ const JobsPage: React.FC = () => {
                     <FaArrowLeft className="mr-2" />
                     Back to listings
                   </button>
+                  <button
+                    onClick={handleSubmitApplication}
+                    className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    <FaPaperPlane className="mr-2" />
+                    Submit Application
+                  </button>
                 </div>
 
                 {/* Job Details */}

@@ -45,7 +45,7 @@ const JobDetails: React.FC<JobDetailsProps> = ({ job, onBack }) => {
           <div>
             <a href={`mailto:${job.applicationMethod.value}?subject=Application for ${job.title} position`}
             className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
-            <FaPaperPlane className="mr-2" />
+  
               Submit Application
             </a>
             <p className="text-gray-700 mb-2">Send your application to:</p>
@@ -63,7 +63,6 @@ const JobDetails: React.FC<JobDetailsProps> = ({ job, onBack }) => {
           <div>
             <a   href={job.applicationMethod.value} target="_blank" rel="noopener noreferrer"
             className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
-            <FaPaperPlane className="mr-2" />
               Submit Application
             </a>
             <p className="text-gray-700 mb-2">Apply through our website:</p>
