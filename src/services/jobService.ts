@@ -1,4 +1,4 @@
-const API_BASE = "https://job-app-7u0y.onrender.com/api" ;
+const API_BASE = "https://job-backend-ecpw.onrender.com/api" ;
 
 const getAllJobs = (filters = {}) => {
   const query = new URLSearchParams(filters).toString();
