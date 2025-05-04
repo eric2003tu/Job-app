@@ -3,12 +3,14 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
+"scripts": {
+  "dev": "vite --host 0.0.0.0 --port 5173",  
+  "build": "vite build",                     
+  "preview": "vite preview --host 0.0.0.0 --port 5173",  
+  "start": "vite preview --host 0.0.0.0 --port 5173",    
+  "lint": "eslint . --ext .js,.jsx,.ts,.tsx",  
+  "type-check": "tsc --noEmit"                
+},
   "dependencies": {
     "@headlessui/react": "^1.7.18",
     "framer-motion": "^11.0.8",
