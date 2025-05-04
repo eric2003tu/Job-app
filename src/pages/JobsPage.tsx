@@ -5,12 +5,8 @@ import JobCard from '../components/JobCard';
 import SearchBar from '../components/SearchBar';
 import JobFilters from '../components/JobFilters';
 import { Loader } from 'lucide-react';
-import JobDetails from './JobDetailPage';
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaPaperPlane } from "react-icons/fa";
 import DOMPurify from 'dompurify';
-
-
-
 
 const JobsPage: React.FC = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -19,6 +15,7 @@ const JobsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [isApplying, setIsApplying] = useState(false);
 
   const fetchJobs = useCallback(async () => {
     try {
@@ -30,7 +27,6 @@ const JobsPage: React.FC = () => {
         throw new Error('Expected array of jobs but got: ' + JSON.stringify(response));
       }
 
-      // Basic type validation
       const isValidJobs = response.every(job => 
         job.id && job.title && job.company && job.location
       );
@@ -55,14 +51,12 @@ const JobsPage: React.FC = () => {
 
   const filteredJobs = useMemo(() => {
     return jobs.filter(job => {
-      // Search across multiple fields
       const matchesSearch = searchQuery 
         ? `${job.title} ${job.company} ${job.location} ${job.category || ''}`
             .toLowerCase()
             .includes(searchQuery.toLowerCase())
         : true;
 
-      // Apply all active filters
       const matchesFilters = Object.entries(filters).every(([key, value]) => 
         !value || String(job[key as keyof Job] || '').toLowerCase() === value.toLowerCase()
       );
@@ -84,19 +78,35 @@ const JobsPage: React.FC = () => {
     setFilters({});
   }, []);
 
-  const handleJobClick = useCallback((job: Job) => {
+  const handleApplyClick = useCallback((job: Job) => {
     setSelectedJob(job);
+    setIsApplying(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   const handleBackToList = useCallback(() => {
     setSelectedJob(null);
+    setIsApplying(false);
   }, []);
+
+  const handleSubmitApplication = useCallback(async () => {
+    if (!selectedJob) return;
+    
+    try {
+      // Here you would call your API to submit the application
+      // await jobService.submitApplication(selectedJob.id);
+      alert(`Application submitted for ${selectedJob.title} at ${selectedJob.company}!`);
+      handleBackToList();
+    } catch (err) {
+      console.error('Failed to submit application:', err);
+      alert('Failed to submit application. Please try again.');
+    }
+  }, [selectedJob, handleBackToList]);
 
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header Section */}
+        {/* Header Section - Always Visible */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl shadow-lg p-8 mb-8">
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-white mb-4">Find Your Dream Job</h1>
@@ -109,7 +119,7 @@ const JobsPage: React.FC = () => {
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Filters Sidebar */}
+          {/* Filters Sidebar - Always Visible */}
           <div className="lg:col-span-1">
             <JobFilters 
               onFilterChange={handleFilterChange} 
@@ -118,19 +128,50 @@ const JobsPage: React.FC = () => {
             />
           </div>
 
-          {/* Jobs List */}
+          {/* Jobs List/Application View */}
           <div className="lg:col-span-3">
-            {selectedJob ? (
+            {isApplying && selectedJob ? (
               <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                <button 
-                  onClick={handleBackToList}
-                  className="flex items-center text-blue-600 hover:text-blue-800 mb-4"
-                  aria-label="Back to job listings"
-                >
-                  <FaArrowLeft className="mr-2" />
-                  Back to listings
-                </button>
-                <JobDetails job={selectedJob} />
+                {/* Application Header */}
+                <div className="flex justify-between items-center mb-6">
+                  <button 
+                    onClick={handleBackToList}
+                    className="flex items-center text-blue-600 hover:text-blue-800"
+                  >
+                    <FaArrowLeft className="mr-2" />
+                    Back to listings
+                  </button>
+                  <button
+                    onClick={handleSubmitApplication}
+                    className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    <FaPaperPlane className="mr-2" />
+                    Submit Application
+                  </button>
+                </div>
+
+                {/* Job Details */}
+                <div className="mb-4">
+                  <h2 className="text-2xl font-bold mb-2">{selectedJob.title}</h2>
+                  <h3 className="text-xl text-gray-700 mb-4">{selectedJob.company} • {selectedJob.location}</h3>
+                  
+                  <div className="prose max-w-none mb-6">
+                    <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedJob.description) }} />
+                  </div>
+
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2">How to Apply:</h4>
+                    {selectedJob.applicationMethod.type === 'email' ? (
+                      <p>Send your application to: <a href={`mailto:${selectedJob.applicationMethod.value}`} className="text-blue-600">
+                        {selectedJob.applicationMethod.value}
+                      </a></p>
+                    ) : (
+                      <p>Apply through our website: <a href={selectedJob.applicationMethod.value} className="text-blue-600" target="_blank" rel="noopener noreferrer">
+                        {selectedJob.applicationMethod.value}
+                      </a></p>
+                    )}
+                  </div>
+                </div>
               </div>
             ) : (
               <>
@@ -187,6 +228,7 @@ const JobsPage: React.FC = () => {
                           description: DOMPurify.sanitize(job.description)
                         }} 
                         onClick={() => handleJobClick(job)}
+                        onApply={() => handleApplyClick(job)}
                       />
                     ))}
                   </div>
