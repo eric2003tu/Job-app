@@ -1,3 +1,5 @@
+// search for a job 
+
 import React, { useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,7 +28,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
         onSubmit={handleSubmit}
         className="relative"
         initial={false}
-        animate={isFocused ? { scale: 1.02 } : { scale: 1 }}
+        animate={isFocused ? { scale: 1.02} : { scale: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
         <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">

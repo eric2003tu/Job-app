@@ -1,3 +1,5 @@
+//filter by job
+
 import React from 'react';
 import { Filter, X } from 'lucide-react';
 import { motion } from 'framer-motion';

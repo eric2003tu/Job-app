@@ -1,3 +1,5 @@
+//list jobs available
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { jobService } from '../services/jobService';
 import { Job } from '../types';
