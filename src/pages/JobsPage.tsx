@@ -7,6 +7,9 @@ import JobFilters from '../components/JobFilters';
 import { Loader } from 'lucide-react';
 import JobDetails from './JobDetailPage';
 import { FaArrowLeft } from "react-icons/fa";
+import DOMPurify from 'dompurify';
+
+
 
 
 const JobsPage: React.FC = () => {
