@@ -1,4 +1,4 @@
-// Updated to ensure `jobService.createJob` is defined
+//post job page
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jobService } from '../services/jobService';
@@ -29,6 +29,8 @@ const PostJobPage: React.FC = () => {
     salary: ''
   });
   
+  //available employment types
+
   const employmentTypes = ['Full-time', 'Part-time', 'Contract', 'Internship'];
   const categories = ['Technology', 'Marketing', 'Administration', 'Customer Service', 'Construction', 'Other'];
   
