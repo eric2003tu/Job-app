@@ -1,3 +1,4 @@
+// Updated to ensure `jobService.createJob` is defined
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jobService } from '../services/jobService';
@@ -143,7 +144,7 @@ const PostJobPage: React.FC = () => {
       
       // Redirect to job detail page after a brief delay
       setTimeout(() => {
-        navigate(`/job/${newJob.id}`);
+        navigate('/');
       }, 2000);
       
     } catch (error) {

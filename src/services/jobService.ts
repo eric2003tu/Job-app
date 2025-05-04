@@ -23,15 +23,20 @@ const getJobById = (id: string) => {
     });
 };
 
-const postNewJob = (job: object) => {
+const createJob = (job: object) => {
   return fetch(`${API_BASE}/jobs`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(job),
   })
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) {
+        throw new Error("Failed to create job");
+      }
+      return res.json();
+    })
     .catch(err => {
-      console.error("Error posting job:", err);
+      console.error("Error creating job:", err);
       throw err;
     });
 };
@@ -75,7 +80,7 @@ const searchJobs = (query: string) => {
 export const jobService = {
   getAllJobs,
   getJobById,
-  postNewJob,
+  createJob,
   updateJob,
   deleteJob,
   searchJobs,
