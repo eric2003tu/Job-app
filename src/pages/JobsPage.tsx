@@ -68,7 +68,7 @@ const JobsPage: React.FC = () => {
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
   }, []);
-
+ 
   const handleFilterChange = useCallback((newFilters: Record<string, string>) => {
     setFilters(newFilters);
   }, []);
