@@ -43,6 +43,11 @@ const JobDetails: React.FC<JobDetailsProps> = ({ job, onBack }) => {
         
         {job.applicationMethod?.type === 'email' ? (
           <div>
+            <a href={`mailto:${job.applicationMethod.value}?subject=Application for ${job.title} position`}
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+            <FaPaperPlane className="mr-2" />
+              Submit Application
+            </a>
             <p className="text-gray-700 mb-2">Send your application to:</p>
             <a
               href={`mailto:${job.applicationMethod.value}?subject=Application for ${job.title} position`}
@@ -50,17 +55,17 @@ const JobDetails: React.FC<JobDetailsProps> = ({ job, onBack }) => {
             >
               Apply via Email: {job.applicationMethod.value}
             </a>
-            <a href={`mailto:${job.applicationMethod.value}?subject=Application for ${job.title} position`}
-            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
-            <FaPaperPlane className="mr-2" />
-              Submit Application
-            </a>
             <p className="text-sm text-gray-500 mt-2">
               Clicking will open your default email client
             </p>
           </div>
         ) : job.applicationMethod?.type === 'link' ? (
           <div>
+            <a   href={job.applicationMethod.value} target="_blank" rel="noopener noreferrer"
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+            <FaPaperPlane className="mr-2" />
+              Submit Application
+            </a>
             <p className="text-gray-700 mb-2">Apply through our website:</p>
             <a
               href={job.applicationMethod.value}
@@ -69,11 +74,6 @@ const JobDetails: React.FC<JobDetailsProps> = ({ job, onBack }) => {
               className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
             >
               Apply Online Now
-            </a>
-            <a   href={job.applicationMethod.value} target="_blank" rel="noopener noreferrer"
-            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
-            <FaPaperPlane className="mr-2" />
-              Submit Application
             </a>
             <p className="text-sm text-gray-500 mt-2">
               External link will open in a new tab
