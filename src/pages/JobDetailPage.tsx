@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { Job } from '../types';
+import { FaPaperPlane } from "react-icons/fa";
 
 interface JobDetailsProps {
   job: Job;
@@ -49,6 +50,11 @@ const JobDetails: React.FC<JobDetailsProps> = ({ job, onBack }) => {
             >
               Apply via Email: {job.applicationMethod.value}
             </a>
+            <a href={`mailto:${job.applicationMethod.value}?subject=Application for ${job.title} position`}
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+            <FaPaperPlane className="mr-2" />
+              Submit Application
+            </a>
             <p className="text-sm text-gray-500 mt-2">
               Clicking will open your default email client
             </p>
@@ -63,6 +69,11 @@ const JobDetails: React.FC<JobDetailsProps> = ({ job, onBack }) => {
               className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
             >
               Apply Online Now
+            </a>
+            <a   href={job.applicationMethod.value} target="_blank" rel="noopener noreferrer"
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+            <FaPaperPlane className="mr-2" />
+              Submit Application
             </a>
             <p className="text-sm text-gray-500 mt-2">
               External link will open in a new tab
