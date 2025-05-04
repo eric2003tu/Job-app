@@ -8,6 +8,7 @@ import { Loader } from 'lucide-react';
 import JobDetails from './JobDetailPage';
 import { FaArrowLeft } from "react-icons/fa";
 
+
 const JobsPage: React.FC = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -16,47 +17,55 @@ const JobsPage: React.FC = () => {
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
-  useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        setIsLoading(true);
-        const response = await jobService.getAllJobs();
-
-        if (response && Array.isArray(response.data)) {
-          setJobs(response.data);
-        } else {
-          throw new Error('Invalid response format');
-        }
-      } catch (err) {
-        console.error('Error fetching jobs:', err);
-        setError('Failed to load jobs. Please try again later.');
-      } finally {
-        setIsLoading(false);
+  const fetchJobs = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError('');
+      const response = await jobService.getAllJobs();
+      
+      if (!Array.isArray(response)) {
+        throw new Error('Expected array of jobs but got: ' + JSON.stringify(response));
       }
-    };
 
-    fetchJobs();
+      // Basic type validation
+      const isValidJobs = response.every(job => 
+        job.id && job.title && job.company && job.location
+      );
+
+      if (!isValidJobs) {
+        throw new Error('Invalid job data structure received');
+      }
+
+      setJobs(response);
+    } catch (err) {
+      console.error('Error fetching jobs:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load jobs. Please try again.');
+      setJobs([]);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    fetchJobs();
+  }, [fetchJobs]);
+
   const filteredJobs = useMemo(() => {
-    let result = [...jobs];
+    return jobs.filter(job => {
+      // Search across multiple fields
+      const matchesSearch = searchQuery 
+        ? `${job.title} ${job.company} ${job.location} ${job.category || ''}`
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())
+        : true;
 
-    if (searchQuery) {
-      result = result.filter(job => {
-        const searchableText = `${job.title} ${job.company} ${job.location} ${job.description} ${job.category || ''}`.toLowerCase();
-        return searchableText.includes(searchQuery.toLowerCase());
-      });
-    }
+      // Apply all active filters
+      const matchesFilters = Object.entries(filters).every(([key, value]) => 
+        !value || String(job[key as keyof Job] || '').toLowerCase() === value.toLowerCase()
+      );
 
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) {
-        result = result.filter(job => 
-          String(job[key as keyof Job]).toLowerCase() === String(value).toLowerCase()
-        );
-      }
+      return matchesSearch && matchesFilters;
     });
-
-    return result;
   }, [jobs, searchQuery, filters]);
 
   const handleSearch = useCallback((query: string) => {
@@ -74,7 +83,6 @@ const JobsPage: React.FC = () => {
 
   const handleJobClick = useCallback((job: Job) => {
     setSelectedJob(job);
-    // Scroll to top when viewing job details
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
@@ -85,7 +93,7 @@ const JobsPage: React.FC = () => {
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Persistent Header */}
+        {/* Header Section */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl shadow-lg p-8 mb-8">
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-white mb-4">Find Your Dream Job</h1>
@@ -96,8 +104,9 @@ const JobsPage: React.FC = () => {
           <SearchBar onSearch={handleSearch} />
         </div>
 
+        {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Persistent Filters */}
+          {/* Filters Sidebar */}
           <div className="lg:col-span-1">
             <JobFilters 
               onFilterChange={handleFilterChange} 
@@ -106,20 +115,25 @@ const JobsPage: React.FC = () => {
             />
           </div>
 
-          {/* Main Content Area */}
+          {/* Jobs List */}
           <div className="lg:col-span-3">
             {selectedJob ? (
-              // Job Details View
               <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-
-                <JobDetails job={selectedJob} onBack={handleBackToList} />
+                <button 
+                  onClick={handleBackToList}
+                  className="flex items-center text-blue-600 hover:text-blue-800 mb-4"
+                  aria-label="Back to job listings"
+                >
+                  <FaArrowLeft className="mr-2" />
+                  Back to listings
+                </button>
+                <JobDetails job={selectedJob} />
               </div>
             ) : (
-              // Jobs List View
               <>
                 <div className="mb-4 flex justify-between items-center">
                   <h2 className="text-xl font-semibold text-gray-900">
-                    {isLoading ? 'Finding jobs...' : `${filteredJobs.length} Jobs Available`}
+                    {isLoading ? 'Finding jobs...' : `${filteredJobs.length} ${filteredJobs.length === 1 ? 'Job' : 'Jobs'} Available`}
                   </h2>
 
                   {(Object.keys(filters).length > 0 || searchQuery) && (
@@ -134,30 +148,42 @@ const JobsPage: React.FC = () => {
                 </div>
 
                 {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                    <span className="block sm:inline">{error}</span>
-                    <button 
-                      onClick={() => setError('')} 
-                      className="absolute top-0 right-0 px-2 py-1"
-                      aria-label="Dismiss error"
-                    >
-                      &times;
-                    </button>
+                  <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+                    <div className="flex">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm text-red-700">{error}</p>
+                        <button 
+                          onClick={fetchJobs} 
+                          className="mt-2 text-sm font-medium text-red-600 hover:text-red-500"
+                        >
+                          Retry loading jobs
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
 
                 {isLoading ? (
-                  <div className="flex justify-center items-center py-12">
-                    <Loader className="h-8 w-8 text-blue-600 animate-spin" />
-                    <span className="ml-2 text-gray-600">Loading jobs...</span>
+                  <div className="space-y-4">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className="bg-white rounded-lg shadow-sm p-6 h-32 animate-pulse" />
+                    ))}
                   </div>
                 ) : filteredJobs.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {filteredJobs.map(job => (
                       <JobCard 
-                        key={job.id || job._id} 
-                        job={job} 
-                        onApplyClick={handleJobClick}
+                        key={job.id} 
+                        job={{
+                          ...job,
+                          description: DOMPurify.sanitize(job.description)
+                        }} 
+                        onClick={() => handleJobClick(job)}
                       />
                     ))}
                   </div>
@@ -167,7 +193,7 @@ const JobsPage: React.FC = () => {
                     <p className="text-gray-500 mb-4">Try adjusting your search or filters</p>
                     <button
                       onClick={resetFiltersAndSearch}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                     >
                       Reset search and filters
                     </button>

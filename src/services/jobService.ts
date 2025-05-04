@@ -10,6 +10,7 @@ const getAllJobs = (filters = {}) => {
       console.error("Error fetching jobs:", err);
       throw err;
     });
+    
 };
 
 const getJobById = (id: string) => {
